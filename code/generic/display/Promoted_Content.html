@@ -60,9 +60,17 @@
     </li>
 </ul>
 
+<!-- PROMOTED IGN RECOMMENDS -->
+<a id="promoted_ignrecommends_1" class="item" href="">
+  <div class="wrap promoted">
+      <img class="image" src=""/>
+  </div>
+  <div class="headline"></div>
+</a>
+
 
 <script>
-    
+
 // Example values's
 // Video Id : 6dd71fcb3dda9c7563f8fe0356934ee8
 // Article Id : 51523865402df91d75d8e2f2
@@ -73,16 +81,16 @@ var promotedVideoOrArticleId = "[%ContentID%]";
 var forceURL = "[%ForceClickURL%]";
 
 if(promotedVideoOrArticleId != "") {
-  
+
   var APIURL;
   if(contentType == "Article") {
     APIURL = "http://apis.ign.com/article/v3/articles/"+promotedVideoOrArticleId+"?"+ Math.floor(Math.random()*12);
-  }else if(contentType == "Video") {
+  } else if(contentType == "Video") {
     APIURL = "http://apis.ign.com/video/v3/videos/"+promotedVideoOrArticleId+"?"+ Math.floor(Math.random()*12);
   }
 
   // IE support for JSON cross domain requests 
-  if ($.browser.msie && parseInt($.browser.version, 10) >= 8 && window.XDomainRequest) {
+  if($.browser.msie && parseInt($.browser.version, 10) >= 8 && window.XDomainRequest) {
     // Use Microsoft XDR
     var xdr = new XDomainRequest();
     xdr.open("get", APIURL);
@@ -92,9 +100,7 @@ if(promotedVideoOrArticleId != "") {
       initAdUnits(data); // parse using same function as for jQuery's getjson success event
     }
     xdr.send();
-  } 
-  else 
-  {
+  } else {
     var jqxhr = $.getJSON( APIURL, function(data) {
       initAdUnits(data);
     })
@@ -111,18 +117,20 @@ function initAdUnits(data)
 {
   if(contentType == "Video") {
     if(data["videoId"]) {
-      
+
       checkAndCreatePromotedVideoContent(0, data);
       createPromotedTrendingContent(data);
       createMobileSponsoredStory(data);
-      
+      createPromotedIgnRecommendsContent(data);
+
     }
-  }else if(contentType == "Article") {
-    if(data["articleId"]){
-        
+  } else if(contentType == "Article") {
+    if(data["articleId"]) {
+
       createPromotedTrendingContent(data);
       createMobileSponsoredStory(data);
-        
+      createPromotedIgnRecommendsContent(data);
+
     }
   }
 }
@@ -282,33 +290,33 @@ function createMobileSponsoredStory(data)
   if(contentType == "Article") {
     if(data['metadata']['state'] == "published") {
       if(data['metadata']['slug'] && data['promo']['promoImages'][0]['url'] && data['metadata']['headline']) {
-    
+
         // -----------------------------------------------
         // FILL IN HTML DATA FROM ARTICLE API RESPONSE
         // -----------------------------------------------
-      
+
         var date = data['metadata']['publishDate'];
         date = date.split("T");
         date = date[0].split("-");
-    
+
         // Form this structure : http://www.ign.com/articles/2013/03/26/primal-carnage-genesis-first-screenshots
         var articleURL = "http://www.ign.com/articles/"+date[0]+"/"+date[1]+"/"+date[2]+"/"+data['metadata']['slug'];
         jQuery('#sponsored-story a').attr("href", "%%CLICK_URL_UNESC%%"+articleURL);
-      
+
         // Image URL from API response
         jQuery('#sponsored-story .newsfeed_img img').attr("src", data['promo']['promoImages'][0]['url']);
-        
+
         // Blogroll headline from API response
         jQuery('#sponsored-story .newsfeed_text h3').text(data['metadata']['headline']);
       }
     }
   }else if(contentType == "Video") {
-  
+
     jQuery("#sponsored-story .newsfeed_img").append('<span class="video_play_btn"><span></span></span>');
     // -----------------------------------------------
     // FILL IN HTML DATA FROM VIDEO API RESPONSE
     // -----------------------------------------------
-    
+
     // If all the required data for promoted content is present in Video API response
         if(data['metadata']['url'] && data['metadata']['name'] && data['thumbnails'][0]['styleUrl']) {
         
@@ -325,11 +333,11 @@ function createMobileSponsoredStory(data)
             jQuery('#sponsored-story .newsfeed_text h3').text(data['metadata']['name']);
         }
   }
-  
+
   // -----------------------------------------------
   // MOVE TO PARENT PAGE
   // -----------------------------------------------
-      
+
   pNode=top.document.getElementById("list_articles");
 
     if (jQuery(pNode).length > 0) {
@@ -339,6 +347,75 @@ function createMobileSponsoredStory(data)
 
         pNode.insertBefore(sponsoredNode,articleItem[5]);
     }
+}
+
+/**
+ * For IGN Recommends widget
+ */
+function createPromotedIgnRecommendsContent(data) {
+  var thumbUrl;
+
+  if (contentType == 'Article') {
+    if(data['metadata']['state'] == 'published' && data['metadata']['slug'] && data['promo']['promoImages'][0]['url'] && data['metadata']['headline']) {
+
+      // -----------------------------------------------
+      // FILL IN HTML DATA FROM ARTICLE API RESPONSE
+      // -----------------------------------------------
+    
+      var date = data['metadata']['publishDate'],
+        styleUrl = data['promo']['promoImages'][0]['styleUrl'];
+
+      date = date.split('T');
+      date = date[0].split('-');
+
+      // Form this structure : http://www.ign.com/articles/2013/03/26/primal-carnage-genesis-first-screenshots
+      var articleURL = 'http://www.ign.com/articles/'+date[0]+'/'+date[1]+'/'+date[2]+'/'+data['metadata']['slug'];
+      jQuery('#promoted_ignrecommends_1 .item').attr('href', '%%CLICK_URL_UNESC%%'+articleURL);
+
+      // Image URL from API response
+      if (styleUrl) {
+        thumbUrl = styleUrl.replace(/{size}/g, '247w');
+      } else {
+        thumbUrl = data['promo']['promoImages'][0]['url'];
+      }
+
+      jQuery('#promoted_ignrecommends_1 .image').attr('src', thumbUrl);
+
+      // Blogroll headline from API response
+      jQuery('#promoted_ignrecommends_1 .headline').text(data['metadata']['headline']);
+    }
+  } else if(contentType == 'Video') {
+    // If all the required data for promoted content is present in Video API response
+    if(data['metadata']['url'] && data['metadata']['name'] && data['thumbnails'][0]['styleUrl']) {
+
+    // -----------------------------------------------
+    // FILL IN HTML DATA FROM VIDEO API RESPONSE
+    // -----------------------------------------------
+
+      // If no force URL: click url is video (default)
+      // If force URL: click url is article url
+      var clickURL = (forceURL != '') ? forceURL : data['metadata']['url'];
+      jQuery('#promoted_ignrecommends_1.item').attr("href", "%%CLICK_URL_UNESC%%"+clickURL);
+
+      // Image thumbnail from API response
+      thumbUrl = data['thumbnails'][0]['styleUrl'];
+      thumbUrl = thumbUrl.replace(/{size}/g, '247w');
+      jQuery('#promoted_ignrecommends_1 .image').attr('src', thumbUrl);
+      
+      // Blogroll Headline from API response
+      jQuery('#promoted_ignrecommends_1 .headline').text(data['metadata']['name']);
+    }
+  }
+
+  // -----------------------------------------------
+  // MOVE TO PARENT PAGE
+  // -----------------------------------------------
+
+  // Remove the last recommended item to make room for promoted unit
+  jQuery('#ign-recommends .item', window.parent.document).last().remove();
+
+  // Add the promoted content into trending content widget
+  jQuery('#ign-recommends .items', window.parent.document).prepend(jQuery('#promoted_ignrecommends_1')[0]);
 }
 
 </script>
